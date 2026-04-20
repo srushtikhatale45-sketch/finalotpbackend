@@ -13,7 +13,7 @@ const OTP = sequelize.define('OTP', {
     field: 'phone_number'
   },
   otpCode: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(6),
     allowNull: false,
     field: 'otp_code'
   },
@@ -43,7 +43,8 @@ const OTP = sequelize.define('OTP', {
   }
 }, {
   tableName: 'otp_verifications',
-  timestamps: false
+  timestamps: false,
+  underscored: true
 });
 
 module.exports = OTP;

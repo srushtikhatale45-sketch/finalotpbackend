@@ -1,43 +1,51 @@
-const axios = require('axios');
+const { sequelize, connectDB } = require('./config/database');
+const User = require('./models/User');
+const OTP = require('./models/OTP');
 
-async function testAPI() {
-  console.log('Testing API endpoints...\n');
+async function testDatabase() {
+  console.log('🔍 Testing Database Connection...\n');
   
   try {
-    // Test health
-    console.log('1. Testing health endpoint...');
-    const health = await axios.get('http://localhost:5000/health');
-    console.log('✅ Health check passed:', health.data);
+    // Connect to database
+    await connectDB();
     
-    // Test OTP send
-    console.log('\n2. Testing OTP send endpoint...');
-    const sendOTP = await axios.post('http://localhost:5000/api/otp/send-otp', {
-      phoneNumber: '9876543210'
+    // Sync all models
+    await sequelize.sync({ force: true });
+    console.log('✅ Tables created successfully!\n');
+    
+    // List all tables
+    const tables = await sequelize.getQueryInterface().showAllTables();
+    console.log('📊 Tables in database:');
+    tables.forEach(table => console.log(`   - ${table}`));
+    
+    // Test creating a user
+    console.log('\n📝 Testing user creation...');
+    const user = await User.create({
+      name: 'Test User',
+      mobileNumber: '9876543210',
+      isVerified: true,
+      preferredChannel: 'sms'
     });
-    console.log('✅ Send OTP response:', sendOTP.data);
+    console.log('✅ User created:', user.toJSON());
     
-    if (sendOTP.data.devOtp) {
-      console.log('\n3. Testing OTP verify endpoint...');
-      const verifyOTP = await axios.post('http://localhost:5000/api/otp/verify-otp', {
-        phoneNumber: '9876543210',
-        otpCode: sendOTP.data.devOtp
-      });
-      console.log('✅ Verify OTP response:', verifyOTP.data);
-    }
+    // Test creating an OTP
+    console.log('\n📝 Testing OTP creation...');
+    const otp = await OTP.create({
+      phoneNumber: '9876543210',
+      otpCode: '123456',
+      channel: 'sms',
+      expiresAt: new Date(Date.now() + 5 * 60000),
+      attempts: 0
+    });
+    console.log('✅ OTP created:', otp.toJSON());
     
-    console.log('\n🎉 All tests passed! API is working correctly.');
+    console.log('\n🎉 Database test completed successfully!');
     
   } catch (error) {
-    console.error('\n❌ Test failed:');
-    if (error.code === 'ECONNREFUSED') {
-      console.error('Cannot connect to server. Make sure backend is running on port 5000');
-    } else if (error.response) {
-      console.error('Status:', error.response.status);
-      console.error('Data:', error.response.data);
-    } else {
-      console.error('Error:', error.message);
-    }
+    console.error('❌ Database test failed:', error);
+  } finally {
+    await sequelize.close();
   }
 }
 
-testAPI();
+testDatabase();

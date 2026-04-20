@@ -42,15 +42,19 @@ const User = sequelize.define('User', {
 }, {
   tableName: 'users',
   timestamps: true,
-  underscored: true
+  underscored: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 });
 
+// Hash refresh token method
 User.prototype.hashRefreshToken = async function(token) {
   const salt = await bcrypt.genSalt(10);
   this.refreshToken = await bcrypt.hash(token, salt);
   await this.save();
 };
 
+// Verify refresh token method
 User.prototype.verifyRefreshToken = async function(token) {
   if (!this.refreshToken) return false;
   return await bcrypt.compare(token, this.refreshToken);
