@@ -16,6 +16,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Apply CORS middleware FIRST
+app.options('*', corsMiddleware); 
 app.use(corsMiddleware);
 app.use(manualCorsHeaders);
 
